@@ -295,6 +295,7 @@ async function gerarCotacao() {
    - Modalidade inexistente: use []
 
 4. Use "—" para campos não encontrados. Valores monetários com "R$".
+5. IMPORTANTE: todos os campos de texto (segurado, veiculo, cpf, placa, etc) devem ser STRINGS simples, nunca objetos ou arrays. Ex: "segurado": "João Silva", não {{"nome": "João"}}.
 
 TEXTO DO PDF (início):
 ${texto.substring(0,5000)}
@@ -371,6 +372,12 @@ function mostrarErro(msg) {
   document.getElementById('errBox').classList.add('show');
 }
 
+function toStr(v) {
+  if (!v || v === '—') return '—';
+  if (typeof v === 'object') return Object.values(v).filter(x => x && typeof x === 'string').join(' ') || '—';
+  return String(v).trim() || '—';
+}
+
 function renderResult(d) {
   const campos = [
     ['Segurado', d.segurado], ['Seguradora', d.seguradora],
@@ -379,7 +386,7 @@ function renderResult(d) {
     ['Vigência', d.vigencia], ['Validade', d.validade]
   ];
   document.getElementById('dadosGrid').innerHTML = campos.map(([l,v]) =>
-    `<div><div class="dado-label">${l}</div><div class="dado-value">${v||'—'}</div></div>`
+    `<div><div class="dado-label">${l}</div><div class="dado-value">${toStr(v)}</div></div>`
   ).join('');
 
   if (d.coberturas?.length) {
@@ -489,7 +496,7 @@ function gerarPDF() {
   doc.setTextColor(120,120,120); doc.setFontSize(6.5); doc.setFont('helvetica','bold');
   doc.text('VEÍCULO', mg+2, y+2.5);
   doc.setTextColor(30,30,30); doc.setFontSize(8.5); doc.setFont('helvetica','normal');
-  doc.text(d.veiculo||'—', mg+2, y+8.5);
+  doc.text((typeof d.veiculo==='object' ? Object.values(d.veiculo||{}).filter(Boolean).join(' ') : d.veiculo)||'—', mg+2, y+8.5);
   y += 12;
   campo2('Placa', d.placa, 'Ano Fabricação / Modelo', d.ano);
   campo2('Código FIPE', d.fipe, 'Uso', d.uso);
