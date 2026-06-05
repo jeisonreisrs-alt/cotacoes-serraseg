@@ -266,42 +266,61 @@ async function gerarCotacao() {
   setStep(2,'active');
   const obs = document.getElementById('obsInput').value.trim();
 
-  const prompt = `REGRAS IMPORTANTES:
+  const prompt = `Você é especialista em cotações de seguro auto brasileiro. Extraia os dados do PDF abaixo e retorne APENAS o JSON, sem texto antes ou depois.
 
-1. COBERTURAS: extraia todas as linhas contratadas (ignore "Não contratada" e prêmio R$ 0,00):
-   - "nome": nome da cobertura
-   - "lmi": limite de indenização (ex: "100% FIPE", "R$ 200.000,00", "VIP", "Ilimitado")
-   - "premio": PRIMEIRO valor monetário da linha (ex: "R$ 2.675,80")
-   - "franquia":
-     * HDI: linha do CASCO tem dois valores — SEGUNDO é a franquia
-     * Porto Seguro: aparece na coluna (ex: "R$ 6.139,00 (50% da Obrigatória)")
-     * Allianz: busque seção "FRANQUIA - PARTICIPAÇÃO OBRIGATÓRIA"
-     * Tokio Marine: tabela de coberturas NÃO tem coluna franquia. Busque seção "FRANQUIAS" ou "INDENIZAÇÃO PARCIAL DO VEÍCULO" e aplique o valor encontrado (ex: "R$ 3.785,00 (50% da Básica)") somente na cobertura Colisão/Casco. Demais coberturas use "—"
-     * Suíça: franquia na própria coluna da tabela
-     * Se só percentual (ex: "Facultativa 50%"), use esse texto
-     * Sem franquia: use "—"
+ATENÇÃO: Todos os campos devem ser STRINGS simples. NUNCA use objetos ou arrays para campos de texto.
+CORRETO: "segurado": "João Silva da Costa"
+ERRADO: "segurado": {"nome": "João", "sobrenome": "Silva"}
 
-2. VALORES FINANCEIROS:
-   - "premio_liquido": "Prêmio Líquido total" ou "Prêmio Total Líquido" (sem IOF)
-   - "premio_total": valor total à vista com IOF incluído
-   - "iof": valor do IOF em R$. Se aparecer só como percentual, calcule: premio_total menos premio_liquido
+Retorne exatamente este JSON preenchido:
+{
+  "seguradora": "nome da seguradora",
+  "segurado": "nome completo do segurado como string",
+  "cpf": "CPF ou CNPJ como string",
+  "nascimento": "data de nascimento como string",
+  "bonus": "classe de bônus como string",
+  "operacao": "tipo de operação (Renovação, Novo, etc)",
+  "veiculo": "marca, modelo e versão completos como string",
+  "placa": "placa do veículo como string",
+  "ano": "ano fabricação/modelo como string",
+  "fipe": "código FIPE como string",
+  "uso": "uso do veículo como string",
+  "cep": "CEP de pernoite como string",
+  "zerokm": "Sim ou Não",
+  "vigencia": "período de vigência como string",
+  "validade": "validade da cotação como string",
+  "coberturas": [
+    {
+      "nome": "nome da cobertura como string",
+      "lmi": "limite de indenização como string",
+      "premio": "valor do prêmio como string (ex: R$ 1.154,78)",
+      "franquia": "valor da franquia como string ou —"
+    }
+  ],
+  "premio_liquido": "prêmio líquido total como string",
+  "iof": "valor do IOF como string",
+  "premio_total": "prêmio total à vista como string",
+  "parcelas_cartao": ["valor 1x", "valor 2x", "valor 3x"],
+  "parcelas_boleto": ["valor 1x", "valor 2x"],
+  "debito_conta": ["valor 1x", "valor 2x"],
+  "boleto_avista": "valor à vista como string",
+  "max_parcelas_sem_juros_cartao": "número como string"
+}
 
-3. FORMAS DE PAGAMENTO (use o valor da PARCELA, não o total):
-   - "parcelas_cartao": 1x a 12x no Cartão de Crédito
-   - "parcelas_boleto": 1x a 10x no Boleto, Carnê ou Ficha
-   - "debito_conta": 1x a 10x no Débito em Conta ou Débito/PIX
-   - "boleto_avista": valor à vista no boleto/PIX (valor de 1x no boleto)
-   - "max_parcelas_sem_juros_cartao": máximo de parcelas sem juros no cartão
-   - Modalidade inexistente: use []
-
-4. Use "—" para campos não encontrados. Valores monetários com "R$".
-5. IMPORTANTE: todos os campos de texto (segurado, veiculo, cpf, placa, etc) devem ser STRINGS simples, nunca objetos ou arrays. Ex: "segurado": "João Silva", não {{"nome": "João"}}.
+REGRAS:
+- Ignore coberturas "Não contratada" ou com prêmio R$ 0,00
+- Franquia HDI: linha do CASCO tem dois valores — o SEGUNDO é a franquia
+- Franquia Porto Seguro: coluna franquia (ex: "R$ 6.139,00 (50% da Obrigatória)")
+- Franquia Allianz: seção "FRANQUIA - PARTICIPAÇÃO OBRIGATÓRIA"
+- Franquia Tokio Marine: seção "FRANQUIAS" — aplique só no Casco
+- Parcelamento: use valor da PARCELA, não o total
+- Campos não encontrados: use "—"
 
 TEXTO DO PDF (início):
-${texto.substring(0,5000)}
+\${texto.substring(0,5000)}
 
 TEXTO DO PDF (final):
-${texto.substring(Math.max(0,texto.length-3000))}`;
+\${texto.substring(Math.max(0,texto.length-3000))}`;
 
   let dados = null;
   try {
