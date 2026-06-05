@@ -349,6 +349,7 @@ TEXTO DO PDF COMPLETO:
     }
     const data = await resp.json();
     const raw = data.content?.find(b => b.type==='text')?.text || '';
+    console.log('RAW response (first 500):', raw.substring(0,500));
     // Limpar resposta e extrair JSON
     let clean = raw.replace(/```json/gi,'').replace(/```/g,'').trim();
     // Encontrar início e fim do JSON
@@ -369,6 +370,7 @@ TEXTO DO PDF COMPLETO:
       }
     }
     dados = JSON.parse(clean);
+    console.log('JSON parsed:', JSON.stringify(dados, null, 2));
     setStep(2,'done');
   } catch(e) {
     setStep(2,'err');
