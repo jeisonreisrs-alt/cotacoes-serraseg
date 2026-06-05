@@ -234,6 +234,9 @@ async function lerPDF(file) {
     const tc = await pg.getTextContent();
     txt += tc.items.map(x => x.str).join(' ') + '\n';
   }
+  console.log('=== TEXTO EXTRAIDO (primeiros 500 chars) ===');
+  console.log(txt.substring(0, 500));
+  console.log('=== TOTAL CHARS:', txt.length, '===');
   return txt;
 }
 
