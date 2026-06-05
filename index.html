@@ -320,7 +320,7 @@ REGRAS:
 - Campos não encontrados: use "—"
 
 EXTRAÇÃO POR SEGURADORA:
-Porto Seguro: premio_liquido="Prêmio Total Líquido", premio_total="Prêmio Total", boleto_avista=boleto à vista com desconto, parcelas_cartao=tabela "TODAS CARTÃO DE CRÉDITO PORTO BANK (AQUISIÇÃO)", parcelas_boleto=tabela "1 BOLETO / DEMAIS CARNÊ", debito_conta=tabela "TODAS DÉBITO C. CORRENTE", validade=campo "Orçamento válido", bonus=campo "Bônus Único CLASSE X"
+Porto Seguro: premio_liquido="Prêmio Total Líquido", premio_total="Prêmio Total", boleto_avista=boleto à vista com desconto, parcelas_cartao=tabela "TODAS CARTÃO DE CRÉDITO PORTO BANK (AQUISIÇÃO)" com valores de 1x a 12x, parcelas_boleto=tabela "1 BOLETO / DEMAIS CARNÊ" — se não tiver 1x use o valor do boleto_avista como 1x e complete com 2x em diante, debito_conta=tabela "TODAS DÉBITO C. CORRENTE" — se não tiver 1x use o valor do boleto_avista como 1x e complete com 2x em diante, validade=campo "Orçamento válido", bonus=campo "Bônus Único CLASSE X"
 HDI: premio_liquido="PRÊMIO TOTAL LÍQUIDO", premio_total="TOTAL À VISTA", parcelas_cartao=tabela "Cartão de Crédito"
 Allianz: premio_liquido="Preço Líquido", premio_total="Preço Total", parcelas_cartao=tabela "Cartão de Crédito"
 Tokio Marine: premio_liquido="Prêmio Líquido total", premio_total=valor à vista, parcelas_cartao=tabela "Cartão"
