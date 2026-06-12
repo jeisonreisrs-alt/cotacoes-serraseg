@@ -450,10 +450,30 @@ function renderResult(d) {
   ).join('');
 
   if (d.coberturas?.length) {
+    // Para HDI: corrigir prêmio/franquia do CASCO na renderização
+    const isHDI = (d.seguradora||'').toUpperCase().includes('HDI');
+    const coberturas = d.coberturas.map(c => {
+      if (isHDI) {
+        const nome = (c.nome||'').toUpperCase();
+        if (nome.includes('CASCO') || nome.includes('COMPREENSIVA') || nome.includes('COLISAO') || nome.includes('COLISÃO')) {
+          const toNum = v => {
+            if (!v || v==='—') return 0;
+            return parseFloat(String(v).replace('R$','').replace(/\s/g,'').replace(/\./g,'').replace(',','.')) || 0;
+          };
+          const p = toNum(c.premio), f = toNum(c.franquia);
+          if (p > 0 && p > f) { // prêmio maior que franquia = trocado
+            return {...c, premio: c.franquia, franquia: c.premio};
+          }
+        }
+      }
+      return c;
+    });
     document.getElementById('coberturas').innerHTML =
       `<table class="cob-table"><thead><tr><th>Cobertura</th><th>LMI</th><th>Prêmio</th><th>Franquia</th></tr></thead><tbody>` +
-      d.coberturas.map(c => `<tr><td>${c.nome||'—'}</td><td>${c.lmi||'—'}</td><td>${c.premio||'—'}</td><td>${c.franquia||'—'}</td></tr>`).join('') +
+      coberturas.map(c => `<tr><td>${c.nome||'—'}</td><td>${c.lmi||'—'}</td><td>${c.premio||'—'}</td><td>${c.franquia||'—'}</td></tr>`).join('') +
       `</tbody></table>`;
+    // Atualizar dadosExtraidos com coberturas corrigidas
+    dadosExtraidos.coberturas = coberturas;
   }
 
   document.getElementById('finBar').innerHTML =
