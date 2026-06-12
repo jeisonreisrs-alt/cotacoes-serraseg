@@ -312,7 +312,7 @@ Retorne exatamente este JSON preenchido:
 
 REGRAS:
 - Ignore coberturas "Não contratada" ou com prêmio R$ 0,00
-- Franquia HDI: linha do CASCO tem dois valores — o SEGUNDO é a franquia
+- Franquia HDI: na tabela "Garantias de Auto", a linha do CASCO tem formato "CASCO | 100,00% FIPE | PRÊMIO | FRANQUIA". O valor do PRÊMIO é o MENOR número (ex: 382,30) e o valor da FRANQUIA é o MAIOR número (ex: 3.136,11). SEMPRE use o número MAIOR como franquia do CASCO na HDI
 - Franquia Porto Seguro: coluna franquia (ex: "R$ 6.139,00 (50% da Obrigatória)")
 - Franquia Allianz: seção "FRANQUIA - PARTICIPAÇÃO OBRIGATÓRIA"
 - Franquia Tokio Marine: seção "FRANQUIAS" — aplique só no Casco
