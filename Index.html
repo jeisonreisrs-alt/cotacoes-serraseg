@@ -375,28 +375,35 @@ ${texto.substring(0,12000)}`;
     dados = JSON.parse(clean);
     console.log('JSON parsed:', JSON.stringify(dados, null, 2));
 
-    // Fix HDI franquia: se seguradora for HDI, verifica se prêmio e franquia do CASCO estão trocados
-    if (dados.seguradora && dados.seguradora.toUpperCase().includes('HDI') && dados.coberturas) {
-      dados.coberturas = dados.coberturas.map(c => {
-        const nome = (c.nome || '').toUpperCase();
-        if (nome.includes('CASCO') || nome.includes('COMPREENSIVA') || nome.includes('COLISAO') || nome.includes('COLISÃO')) {
-          // Extrair valores numéricos de premio e franquia
-          const extractNum = v => {
-            if (!v || v === '—') return 0;
-            return parseFloat(String(v).replace(/[^0-9,]/g,'').replace(',','.')) || 0;
-          };
-          const vPremio = extractNum(c.premio);
-          const vFranquia = extractNum(c.franquia);
-          // Na HDI, a franquia do CASCO é sempre maior que o prêmio
-          if (vPremio > 0 && vFranquia > 0 && vPremio > vFranquia) {
-            console.log('HDI: corrigindo troca de premio/franquia do CASCO');
-            const tmp = c.premio;
-            c.premio = c.franquia;
-            c.franquia = tmp;
+    // Fix HDI franquia: na HDI o CASCO tem prêmio e franquia frequentemente trocados pela IA
+    // A franquia do CASCO na HDI é sempre o valor MAIOR (ex: 3136,11) e o prêmio é o MENOR (ex: 382,30)
+    if (dados.coberturas) {
+      const seguradora = (dados.seguradora || '').toUpperCase();
+      if (seguradora.includes('HDI')) {
+        dados.coberturas = dados.coberturas.map(c => {
+          const nome = (c.nome || '').toUpperCase();
+          if (nome.includes('CASCO') || nome.includes('COMPREENSIVA') || nome.includes('COLISAO') || nome.includes('COLISÃO')) {
+            const extractNum = v => {
+              if (!v || v === '—') return 0;
+              const s = String(v).replace('R$','').replace(/\s/g,'').trim();
+              // Handle Brazilian format: 3.136,11 -> 3136.11
+              const normalized = s.replace(/\./g,'').replace(',','.');
+              return parseFloat(normalized) || 0;
+            };
+            const vPremio = extractNum(c.premio);
+            const vFranquia = extractNum(c.franquia);
+            console.log('HDI CASCO check - premio:', vPremio, 'franquia:', vFranquia);
+            // Na HDI a franquia do CASCO é sempre maior que o prêmio
+            if (vPremio > 0 && vFranquia > 0 && vPremio > vFranquia) {
+              console.log('HDI: corrigindo troca premio/franquia CASCO');
+              const tmp = c.premio;
+              c.premio = c.franquia;
+              c.franquia = tmp;
+            }
           }
-        }
-        return c;
-      });
+          return c;
+        });
+      }
     }
 
     setStep(2,'done');
