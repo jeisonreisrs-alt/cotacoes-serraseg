@@ -321,7 +321,7 @@ REGRAS:
 - Campos não encontrados: use "—"
 
 EXTRAÇÃO POR SEGURADORA:
-Porto Seguro: premio_liquido="Prêmio Total Líquido", premio_total="Prêmio Total", boleto_avista=boleto à vista com desconto, parcelas_cartao=OBRIGATORIAMENTE use a tabela "TODAS CARTÃO DE CRÉDITO - DEMAIS BANDEIRAS". Esta é a TERCEIRA tabela de cartão. IGNORE as duas primeiras tabelas ("PORTO BANK AQUISIÇÃO" e "PORTO BANK SEM DESCONTO OUTRO TITULAR"). A tabela correta NÃO menciona "Porto Bank" no título, parcelas_boleto=tabela "1 BOLETO / DEMAIS CARNÊ" — se 1x for "-" ou vazio use o valor do boleto_avista como 1x e complete com 2x em diante. ATENÇÃO: o 2x do boleto é R$ 1.128,61 NÃO é o 1x, debito_conta=tabela "TODAS DÉBITO C. CORRENTE" — o 1x existe e tem valor (ex: R$ 2.144,29 com 5% OFF), use esse valor como 1x. Os demais valores são 2x, 3x etc. NUNCA use o valor de 2x como 1x, validade=campo "Orçamento válido", bonus=campo "Bônus Único CLASSE X"
+Porto Seguro: premio_liquido="Prêmio Total Líquido", premio_total="Prêmio Total", boleto_avista=boleto à vista com desconto, parcelas_cartao=OBRIGATORIAMENTE use a tabela "TODAS CARTÃO DE CRÉDITO - DEMAIS BANDEIRAS". Esta é a TERCEIRA tabela de cartão. IGNORE as duas primeiras tabelas ("PORTO BANK AQUISIÇÃO" e "PORTO BANK SEM DESCONTO OUTRO TITULAR"). A tabela correta NÃO menciona "Porto Bank" no título, parcelas_boleto=tabela "1 BOLETO / DEMAIS CARNÊ" — capture TODAS as parcelas de 1x a 12x incluindo as que têm juros. Se 1x for "-" ou vazio use o valor do boleto_avista como 1x. Use o valor da PARCELA (não o total). ATENÇÃO: o 2x do boleto é R$ 1.128,61 NÃO é o 1x, debito_conta=tabela "TODAS DÉBITO C. CORRENTE" — capture TODAS as parcelas disponíveis incluindo as com juros. O 1x existe e tem valor (ex: R$ 1.894,82 com 5% OFF), use esse valor como 1x. Use o valor da PARCELA (não o total). NUNCA use o valor de 2x como 1x, validade=campo "Orçamento válido", bonus=campo "Bônus Único CLASSE X"
 HDI: premio_liquido="PRÊMIO TOTAL LÍQUIDO", premio_total="TOTAL À VISTA", parcelas_cartao=tabela "Cartão de Crédito"
 Allianz: premio_liquido="Preço Líquido", premio_total="Preço Total", parcelas_cartao=tabela "Cartão de Crédito"
 Tokio Marine: premio_liquido="Prêmio Líquido total", premio_total=valor à vista, parcelas_cartao=tabela "Cartão"
@@ -603,7 +603,9 @@ function gerarPDF() {
       cx = mg;
       [c.nome,c.lmi,c.premio,c.franquia].forEach((v,i) => {
         const maxW = cols[i]-4;
-        const txt = doc.splitTextToSize(v||'—', maxW)[0];
+        const fullTxt = String(v||'—');
+        // For franquia column (i===3), truncate long text
+        const txt = doc.splitTextToSize(fullTxt, maxW)[0];
         doc.text(txt, cx+2, y+4);
         cx += cols[i];
       });
