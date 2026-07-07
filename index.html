@@ -270,67 +270,135 @@ async function gerarCotacao() {
   setStep(2,'active');
   const obs = document.getElementById('obsInput').value.trim();
 
-  const prompt = `Você é especialista em cotações de seguro auto brasileiro. Extraia os dados do PDF abaixo e retorne APENAS o JSON, sem texto antes ou depois.
+  const prompt = `Você é especialista em cotações de seguro auto brasileiro. Analise o PDF abaixo e retorne APENAS JSON válido, sem texto antes ou depois.
 
-ATENÇÃO: Todos os campos devem ser STRINGS simples. NUNCA use objetos ou arrays para campos de texto.
-CORRETO: "segurado": "João Silva da Costa"
-ERRADO: "segurado": {"nome": "João", "sobrenome": "Silva"}
+REGRA GERAL - TODOS OS CAMPOS SÃO STRINGS SIMPLES:
+- NUNCA retorne objetos ou arrays para campos de texto
+- CORRETO: "segurado": "João Silva"
+- ERRADO: "segurado": {"nome": "João"}
+- Campos não encontrados: use "—"
+- Valores monetários sempre com "R$" na frente
 
-Retorne exatamente este JSON preenchido:
+═══════════════════════════════════════════
+REGRAS POR SEGURADORA
+═══════════════════════════════════════════
+
+PORTO SEGURO / AZUL SEGUROS:
+- seguradora: "Porto Seguro" ou "Azul Seguro Auto (Porto Seguro)"
+- premio_liquido: campo "Prêmio Total Líquido"
+- iof: campo "IOF" em R$
+- premio_total: campo "Prêmio Total"
+- validade: campo "Orçamento válido"
+- bonus: campo "Bônus Único CLASSE X"
+- parcelas_cartao: tabela "TODAS CARTÃO DE CRÉDITO - DEMAIS BANDEIRAS" (TERCEIRA tabela de cartão, NÃO usar Porto Bank). Valores de 1x a 12x. Use o valor da PARCELA, não o total.
+- debito_conta: tabela "TODAS DÉBITO C. CORRENTE". O 1x existe (ex: R$ 1.894,82 com 5% OFF). Capture TODAS as parcelas disponíveis incluindo com juros. Use valor da PARCELA.
+- parcelas_boleto: tabela "1 BOLETO / DEMAIS CARNÊ". Se 1x for "-", use boleto_avista como 1x. Capture TODAS as parcelas incluindo com juros. Use valor da PARCELA.
+- boleto_avista: campo "Boleto À vista" com desconto (5% OFF)
+
+HDI:
+- seguradora: "HDI Seguros S.A."
+- premio_liquido: "PRÊMIO LÍQUIDO (R$)"
+- iof: "I.O.F. (R$)"
+- premio_total: "TOTAL À VISTA (R$)"
+- validade: "COTAÇÃO VÁLIDA ATÉ"
+- bonus: "Classe Bônus"
+- coberturas CASCO: a linha tem formato "CASCO | 100% FIPE | PRÊMIO | FRANQUIA". O PRÊMIO é o número MENOR e a FRANQUIA é o número MAIOR. Ex: "CASCO 100% FIPE 382,30 3.136,11" → premio="R$ 382,30", franquia="R$ 3.136,11"
+- parcelas_cartao: tabela "Cartão de Crédito", 1x a 12x
+- debito_conta: tabela "Débito Em Conta", 1x a 10x
+- parcelas_boleto: tabela "Carnê", 1x a 10x
+- boleto_avista: valor de 1x no cartão (mesmo valor)
+
+ALLIANZ:
+- seguradora: "Allianz Seguros"
+- premio_liquido: "Preço Líquido"
+- iof: "IOF"
+- premio_total: "Preço Total"
+- validade: "Garantimos as condições desta cotação até"
+- bonus: "Classe Bônus"
+- franquia CASCO: seção "FRANQUIA - PARTICIPAÇÃO OBRIGATÓRIA", campo valor em R$
+- parcelas_cartao: tabela "Cartão de Crédito", 1x a 10x
+- debito_conta: tabela "Débito em Conta", 1x a 10x
+- parcelas_boleto: tabela "Boleto Bancário", 1x a 10x
+- boleto_avista: valor de 1x no boleto
+
+TOKIO MARINE:
+- seguradora: "Tokio Marine Seguradora"
+- premio_liquido: "Prêmio Líquido total"
+- iof: calcule premio_total - premio_liquido se IOF aparecer só como percentual
+- premio_total: valor à vista total
+- validade: "Validade cotação"
+- bonus: não aparece explícito, use "—"
+- franquia CASCO: seção separada "FRANQUIAS" ou "INDENIZAÇÃO PARCIAL DO VEÍCULO". Aplique só no Casco, demais coberturas use "—"
+- parcelas_cartao: tabela "Cartão", coluna "Parcela (R$)", 1x a 12x
+- debito_conta: tabela "Débito/Pix Aut.", coluna "Parcela (R$)", 1x a 10x
+- parcelas_boleto: tabela "Ficha", coluna "Parcela (R$)", 1x a 10x
+- boleto_avista: valor de 1x no boleto/ficha
+
+SUÍÇA SEGURADORA:
+- seguradora: "Suíça Seguradora"
+- premio_liquido: "Prêmio Líquido" ou "Prêmio Líquido (R$)"
+- iof: campo "IOF"
+- premio_total: valor à vista
+- franquia: coluna da própria tabela de coberturas
+- parcelas_cartao: tabela "Cartão de crédito", 1x a 10x
+- debito_conta: tabela "Débito Em Conta", 1x a 10x
+- parcelas_boleto: tabela "Boleto/PIX", 1x a 10x
+- boleto_avista: valor de 1x no boleto
+
+YELUM:
+- seguradora: "Yelum Seguros"
+- premio_liquido: "Prêmio Líquido (R$)"
+- iof: "IOF (R$)"
+- premio_total: "Prêmio Total (R$)"
+- A Yelum SÓ oferece pagamento à vista — não tem parcelamento
+- parcelas_cartao: []
+- debito_conta: []
+- parcelas_boleto: []
+- boleto_avista: único valor disponível (mesmo para Carnê, Débito e PIX)
+- franquia vidros "Ver inf. complementares": use "Variável conforme item"
+
+═══════════════════════════════════════════
+REGRAS DE PARCELAMENTO (todas as seguradoras)
+═══════════════════════════════════════════
+- Sempre use o valor da PARCELA, NUNCA o valor total com juros acumulados
+- Capture TODAS as parcelas disponíveis, inclusive as que têm juros
+- Se uma parcela não existir (aparece "-"), pule ela — não coloque "—"
+- Arrays vazios [] quando a modalidade não existir
+
+═══════════════════════════════════════════
+JSON A PREENCHER:
+═══════════════════════════════════════════
 {
-  "seguradora": "nome da seguradora",
-  "segurado": "nome completo do segurado como string",
-  "cpf": "CPF ou CNPJ como string",
-  "nascimento": "data de nascimento como string",
-  "bonus": "classe de bônus como string",
-  "operacao": "tipo de operação (Renovação, Novo, etc)",
-  "veiculo": "marca, modelo e versão completos como string",
-  "placa": "placa do veículo como string",
-  "ano": "ano fabricação/modelo como string",
-  "fipe": "código FIPE como string",
-  "uso": "uso do veículo como string",
-  "cep": "CEP de pernoite como string",
-  "zerokm": "Sim ou Não",
-  "vigencia": "período de vigência como string",
-  "validade": "validade da cotação como string",
-  "coberturas": [
-    {
-      "nome": "nome da cobertura como string",
-      "lmi": "limite de indenização como string",
-      "premio": "valor do prêmio como string (ex: R$ 1.154,78)",
-      "franquia": "valor da franquia como string ou —"
-    }
-  ],
-  "premio_liquido": "prêmio líquido total como string",
-  "iof": "valor do IOF como string",
-  "premio_total": "prêmio total à vista como string",
-  "parcelas_cartao": ["valor 1x", "valor 2x", "valor 3x"],
-  "parcelas_boleto": ["valor 1x", "valor 2x"],
-  "debito_conta": ["valor 1x", "valor 2x"],
-  "boleto_avista": "valor à vista como string",
-  "max_parcelas_sem_juros_cartao": "número como string"
+  "seguradora": "",
+  "segurado": "",
+  "cpf": "",
+  "nascimento": "",
+  "bonus": "",
+  "operacao": "",
+  "veiculo": "",
+  "placa": "",
+  "ano": "",
+  "fipe": "",
+  "uso": "",
+  "cep": "",
+  "zerokm": "",
+  "vigencia": "",
+  "validade": "",
+  "coberturas": [{"nome":"","lmi":"","premio":"","franquia":""}],
+  "premio_liquido": "",
+  "iof": "",
+  "premio_total": "",
+  "parcelas_cartao": [],
+  "parcelas_boleto": [],
+  "debito_conta": [],
+  "boleto_avista": "",
+  "max_parcelas_sem_juros_cartao": ""
 }
 
-REGRAS:
-- Ignore coberturas "Não contratada" ou com prêmio R$ 0,00
-- Franquia HDI: na tabela "Garantias de Auto", a linha do CASCO tem formato "CASCO | 100,00% FIPE | PRÊMIO | FRANQUIA". O valor do PRÊMIO é o MENOR número (ex: 382,30) e o valor da FRANQUIA é o MAIOR número (ex: 3.136,11). SEMPRE use o número MAIOR como franquia do CASCO na HDI
-- Franquia Porto Seguro: coluna franquia (ex: "R$ 6.139,00 (50% da Obrigatória)")
-- Franquia Allianz: seção "FRANQUIA - PARTICIPAÇÃO OBRIGATÓRIA"
-- Franquia Tokio Marine: seção "FRANQUIAS" — aplique só no Casco
-- Parcelamento: use valor da PARCELA, não o total
-- Campos não encontrados: use "—"
-
-EXTRAÇÃO POR SEGURADORA:
-Porto Seguro: premio_liquido="Prêmio Total Líquido", premio_total="Prêmio Total", boleto_avista=boleto à vista com desconto, parcelas_cartao=OBRIGATORIAMENTE use a tabela "TODAS CARTÃO DE CRÉDITO - DEMAIS BANDEIRAS". Esta é a TERCEIRA tabela de cartão. IGNORE as duas primeiras tabelas ("PORTO BANK AQUISIÇÃO" e "PORTO BANK SEM DESCONTO OUTRO TITULAR"). A tabela correta NÃO menciona "Porto Bank" no título, parcelas_boleto=tabela "1 BOLETO / DEMAIS CARNÊ" — capture TODAS as parcelas de 1x a 12x incluindo as que têm juros. Se 1x for "-" ou vazio use o valor do boleto_avista como 1x. Use o valor da PARCELA (não o total). ATENÇÃO: o 2x do boleto é R$ 1.128,61 NÃO é o 1x, debito_conta=tabela "TODAS DÉBITO C. CORRENTE" — capture TODAS as parcelas disponíveis incluindo as com juros. O 1x existe e tem valor (ex: R$ 1.894,82 com 5% OFF), use esse valor como 1x. Use o valor da PARCELA (não o total). NUNCA use o valor de 2x como 1x, validade=campo "Orçamento válido", bonus=campo "Bônus Único CLASSE X"
-HDI: premio_liquido="PRÊMIO TOTAL LÍQUIDO", premio_total="TOTAL À VISTA", parcelas_cartao=tabela "Cartão de Crédito"
-Allianz: premio_liquido="Preço Líquido", premio_total="Preço Total", parcelas_cartao=tabela "Cartão de Crédito"
-Tokio Marine: premio_liquido="Prêmio Líquido total", premio_total=valor à vista, parcelas_cartao=tabela "Cartão"
-Suíça: premio_liquido="Prêmio Líquido", premio_total=valor à vista
-
 TEXTO DO PDF COMPLETO:
-${texto.substring(0,12000)}`;
+\${texto.substring(0,12000)}`;
 
-  let dados = null;
+let dados = null;
   try {
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
