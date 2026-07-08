@@ -283,7 +283,27 @@ REGRA GERAL - TODOS OS CAMPOS SÃO STRINGS SIMPLES:
 REGRAS POR SEGURADORA
 ═══════════════════════════════════════════
 
-PORTO SEGURO / AZUL SEGUROS:
+PORTO SEGURO / AZUL SEGUROS (existem dois formatos):
+
+FORMATO COMPLETO (5 páginas, tabelas detalhadas de parcelamento):
+- parcelas_cartao: tabela "TODAS CARTÃO DE CRÉDITO - DEMAIS BANDEIRAS" (TERCEIRA tabela)
+- debito_conta: tabela "TODAS DÉBITO C. CORRENTE"
+- parcelas_boleto: tabela "1 BOLETO / DEMAIS CARNÊ"
+- boleto_avista: campo "Boleto À vista" com 5% de desconto
+
+FORMATO RESUMIDO (2 páginas, layout simplificado com "Orçamento de Seguro Auto"):
+- Identificar por: cabeçalho "Orçamento de Seguro Auto" e "Azul Tradicional" ou "Auto Sênior"
+- parcelas_cartao: tabela "Todas Cartão de Crédito - Demais Bandeiras" ou "Porto Bank Sem Desconto (Outro Titular)"
+- debito_conta: tabela "Todas Débito C. Corrente"
+- parcelas_boleto: tabela "1 Boleto / Demais Carnê"
+- boleto_avista: campo "Boleto À vista" com desconto
+- premio_liquido: "Prêmio total líquido"
+- premio_total: "Prêmio total"
+- validade: campo "Validade" no cabeçalho
+- vigencia: campo "Vigência" na seção SEGURO
+- bonus: campo "Bônus" na seção SEGURO
+
+REGRAS COMUNS PORTO SEGURO:
 - seguradora: "Porto Seguro" ou "Azul Seguro Auto (Porto Seguro)"
 - premio_liquido: campo "Prêmio Total Líquido"
 - iof: campo "IOF" em R$
