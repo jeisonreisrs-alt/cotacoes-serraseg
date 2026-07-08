@@ -453,9 +453,8 @@ let dados = null;
           const nome = (c.nome || '').toUpperCase();
           if (nome.includes('CASCO') || nome.includes('COMPREENSIVA') || nome.includes('COLISAO') || nome.includes('COLISÃO')) {
             const extractNum = v => {
-              if (!v || v === '—') return 0;
+              if (v === null || v === undefined || v === '' || v === '—') return 0;
               const s = String(v).replace('R$','').replace(/\s/g,'').trim();
-              // Handle Brazilian format: 3.136,11 -> 3136.11
               const normalized = s.replace(/\./g,'').replace(',','.');
               return parseFloat(normalized) || 0;
             };
@@ -502,8 +501,8 @@ function mostrarErro(msg) {
 }
 
 function toStr(v) {
-  if (!v || v === '—') return '—';
-  if (typeof v === 'object') return Object.values(v).filter(x => x && typeof x === 'string').join(' ') || '—';
+  if (v === null || v === undefined || v === '' || v === '—') return '—';
+  if (typeof v === 'object') return Object.values(v).filter(x => x).map(x => String(x)).join(' ') || '—';
   return String(v).trim() || '—';
 }
 
@@ -526,7 +525,7 @@ function renderResult(d) {
         const nome = (c.nome||'').toUpperCase();
         if (nome.includes('CASCO') || nome.includes('COMPREENSIVA') || nome.includes('COLISAO') || nome.includes('COLISÃO')) {
           const toNum = v => {
-            if (!v || v==='—') return 0;
+            if (v === null || v === undefined || v === '' || v === '—') return 0;
             return parseFloat(String(v).replace('R$','').replace(/\s/g,'').replace(/\./g,'').replace(',','.')) || 0;
           };
           const p = toNum(c.premio), f = toNum(c.franquia);
@@ -738,7 +737,7 @@ function gerarPDF() {
       if (i >= nCols) return;
       doc.setFont('helvetica', destaque ? 'bold' : 'normal');
       doc.setTextColor(destaque ? 26 : 80, destaque ? 39 : 80, destaque ? 68 : 80);
-      const txt = String(v||'—').replace('R$ ','');
+      const txt = String(v !== null && v !== undefined ? v : '—').replace('R$ ','');
       doc.text(txt, mg+labelW+(i*colW)+colW/2, y+4.5, {align:'center'});
     });
     y += 9;
