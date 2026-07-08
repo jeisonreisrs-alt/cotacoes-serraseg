@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- SERRASEG v2.6 - HDI FRANQUIA FIX -->
+<!-- SERRASEG v2.7 - FILE INPUT FIX + DEBUG LOG -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -227,6 +227,7 @@ function setStep(n, state) {
 
 // ── Ler PDF ───────────────────────────────────────────────────────────────────
 async function lerPDF(file) {
+  console.log('=== ARQUIVO SENDO LIDO:', file.name, '| tamanho:', file.size, 'bytes | lastModified:', new Date(file.lastModified).toISOString(), '===');
   const ab = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({data: new Uint8Array(ab)}).promise;
   let txt = '';
@@ -258,8 +259,10 @@ async function gerarCotacao() {
 
   let texto = '';
   try {
+    const nomeArquivoProcessado = pdfFile.name;
     texto = await lerPDF(pdfFile);
     setStep(1,'done');
+    document.getElementById('s1').innerHTML += ' <span style="opacity:.6;font-size:11px">(' + nomeArquivoProcessado + ')</span>';
   } catch(e) {
     setStep(1,'err');
     mostrarErro('Não foi possível ler o PDF: ' + e.message);
