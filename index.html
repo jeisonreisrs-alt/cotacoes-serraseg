@@ -103,7 +103,7 @@ textarea.obs:focus{border-color:#D46A1A;background:#fff}
     <div class="card-sub">Faça upload do PDF da seguradora. A IA extrai os dados automaticamente.</div>
 
     <div class="dropzone" id="dropzone">
-      <input type="file" id="fileInput" accept="application/pdf" onchange="handleFile(this.files[0])">
+      <input type="file" id="fileInput" accept="application/pdf" onclick="this.value=null" onchange="handleFile(this.files[0])">
       <span class="drop-icon">📂</span>
       <p><strong>Clique para selecionar</strong> o PDF</p>
       <p style="font-size:12px;margin-top:4px">Porto Seguro, HDI, Allianz, Suíça, Tokio Marine e outras</p>
