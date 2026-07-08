@@ -573,7 +573,7 @@ function renderResult(d) {
     const p = (arr||[]).filter(Boolean);
     if (!p.length) return '';
     return `<div class="pgto-section"><div class="pgto-titulo">${titulo}</div><div class="pgto-pills">` +
-      p.map((v,i) => `<div class="pgto-pill"><div class="pgto-pill-n">${i+1}x</div><div class="pgto-pill-v">${v.replace('R$ ','')}</div></div>`).join('') +
+      p.map((v,i) => `<div class="pgto-pill"><div class="pgto-pill-n">${i+1}x</div><div class="pgto-pill-v">${String(v!==null&&v!==undefined?v:'—').replace('R$ ','')}</div></div>`).join('') +
       `</div></div>`;
   }
   pgto += pillRow('Cartão de crédito', d.parcelas_cartao);
