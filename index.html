@@ -280,6 +280,12 @@ REGRA GERAL - TODOS OS CAMPOS SÃO STRINGS SIMPLES:
 - Campos não encontrados: use "—"
 - Valores monetários sempre com "R$" na frente
 
+REGRA GERAL - ALINHAMENTO DE ARRAYS DE PARCELAS (parcelas_cartao, parcelas_boleto, debito_conta):
+- A posição de cada valor no array DEVE corresponder exatamente à coluna da tabela (posição 0 = coluna 1x, posição 1 = coluna 2x, etc). NUNCA pule ou remova uma coluna vazia/"-" do meio do array — isso desalinha todas as parcelas seguintes.
+- Se a coluna 1x da tabela de boleto/carnê aparecer como "-" (vazia), NÃO comece o array pela coluna 2x. Coloque nessa posição 0 o valor de boleto_avista (a versão com desconto à vista, que fica em outra parte do PDF), e só então continue com os valores reais de 2x, 3x, 4x... nas posições seguintes.
+- Exemplo correto para uma tabela onde 1x="-", 2x="R$ 1.730,49", 3x="R$ 1.153,66" e o Boleto à vista com desconto é "R$ 3.287,89": parcelas_boleto = ["R$ 3.287,89", "R$ 1.730,49", "R$ 1.153,66", ...]
+- Exemplo ERRADO (desalinhado): parcelas_boleto = ["R$ 1.730,49", "R$ 1.153,66", ...] ← isso faz a parcela de 2x aparecer rotulada como se fosse 1x.
+
 ═══════════════════════════════════════════
 REGRAS POR SEGURADORA
 ═══════════════════════════════════════════
@@ -313,7 +319,7 @@ REGRAS COMUNS PORTO SEGURO:
 - bonus: campo "Bônus Único CLASSE X"
 - parcelas_cartao: tabela "TODAS CARTÃO DE CRÉDITO - DEMAIS BANDEIRAS" (TERCEIRA tabela de cartão, NÃO usar Porto Bank). Valores de 1x a 12x. Use o valor da PARCELA, não o total.
 - debito_conta: tabela "TODAS DÉBITO C. CORRENTE". O 1x existe (ex: R$ 1.894,82 com 5% OFF). Capture TODAS as parcelas disponíveis incluindo com juros. Use valor da PARCELA.
-- parcelas_boleto: tabela "1 BOLETO / DEMAIS CARNÊ". Se 1x for "-", use boleto_avista como 1x. Capture TODAS as parcelas incluindo com juros. Use valor da PARCELA.
+- parcelas_boleto: tabela "1 BOLETO / DEMAIS CARNÊ". A coluna 1x geralmente aparece como "-": nesse caso, use o valor de boleto_avista (com desconto) NA POSIÇÃO 1x — não remova essa posição do array. Capture TODAS as parcelas incluindo com juros, mantendo cada valor na posição exata da sua coluna (1x, 2x, 3x...). Use valor da PARCELA.
 - boleto_avista: campo "Boleto À vista" com desconto (5% OFF)
 
 HDI:
