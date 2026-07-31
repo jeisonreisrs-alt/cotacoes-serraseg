@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- SERRASEG v3.0 - PDF NATIVO NA API (sem extração de texto no navegador) -->
+<!-- SERRASEG v3.1 - FIX FRANQUIA PORTO SEGURO COMPLETO -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -321,6 +321,7 @@ REGRAS COMUNS PORTO SEGURO:
 - debito_conta: tabela "TODAS DÉBITO C. CORRENTE". O 1x existe (ex: R$ 1.894,82 com 5% OFF). Capture TODAS as parcelas disponíveis incluindo com juros. Use valor da PARCELA.
 - parcelas_boleto: tabela "1 BOLETO / DEMAIS CARNÊ". A coluna 1x geralmente aparece como "-": nesse caso, use o valor de boleto_avista (com desconto) NA POSIÇÃO 1x — não remova essa posição do array. Capture TODAS as parcelas incluindo com juros, mantendo cada valor na posição exata da sua coluna (1x, 2x, 3x...). Use valor da PARCELA.
 - boleto_avista: campo "Boleto À vista" com desconto (5% OFF)
+- COBERTURAS (formato completo, tabela "COBERTURAS AUTO"): a tabela tem 5 colunas separadas: "LMI (indenização)" | "Franquia" | "Var. de Opcionais" | "Depreciação" | "Valor do Prêmio". São 5 campos DIFERENTES — NUNCA combine LMI e Franquia num único texto. Exemplo da linha "Casco COMPREENSIVA 100.00% R$ 2.966,00 0.00% 0.00% R$ 667,79": lmi="100,00%", franquia="R$ 2.966,00", premio="R$ 667,79" (ignore as colunas "Var. de Opcionais" e "Depreciação", que não fazem parte do JSON). Para as demais coberturas dessa tabela (RCF-V, APP, Danos Morais, etc.) a franquia normalmente aparece como "-": nesse caso use franquia="—", nunca deixe vazio nem junte com o LMI.
 
 HDI:
 - seguradora: "HDI Seguros S.A."
