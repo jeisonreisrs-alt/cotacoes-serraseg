@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- SERRASEG v3.1 - FIX FRANQUIA PORTO SEGURO COMPLETO -->
+<!-- SERRASEG v3.2 - FIX VIDROS TOKIO MARINE (tabela SERVIÇOS) -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -361,6 +361,7 @@ TOKIO MARINE:
 - debito_conta: tabela "Débito/Pix Aut.", coluna "Parcela (R$)", 1x a 10x
 - parcelas_boleto: tabela "Ficha", coluna "Parcela (R$)", 1x a 10x
 - boleto_avista: valor de 1x no boleto/ficha
+- VIDROS: geralmente NÃO aparece na tabela "COBERTURAS" (que só tem prêmios em R$) — fica numa tabela separada chamada "SERVIÇOS", junto com Martelinho, Lataria/Pintura, Carro Reserva etc., com valor qualitativo tipo "Completo" ou "Não possui". Se a linha "Vidros" da tabela SERVIÇOS mostrar algo diferente de "Não possui", adicione mesmo assim uma linha extra em coberturas: nome="Vidros", lmi="Completo" (ou o texto exato mostrado), premio="Incluído", franquia=resuma os valores da tabela "FRANQUIAS DE SERVIÇOS" logo abaixo (Parabrisa, Vigia/Traseiro, Lateral, Retrovisores, Faróis, Lanternas) no formato "Parabrisa R$ X / Vigia R$ Y / Lateral R$ Z / Retrovisores R$ W / Faróis R$ V". Se a linha Vidros mostrar "Não possui", não crie essa linha extra.
 
 SUÍÇA SEGURADORA:
 - seguradora: "Suíça Seguradora"
