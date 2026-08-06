@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- SERRASEG v3.2 - FIX VIDROS TOKIO MARINE (tabela SERVIÇOS) -->
+<!-- SERRASEG v3.3 - ADICIONA REGRAS ZURICH (pagamento genérico) -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -385,6 +385,17 @@ YELUM:
 - parcelas_boleto: []
 - boleto_avista: único valor disponível (mesmo para Carnê, Débito e PIX)
 - franquia vidros "Ver inf. complementares": use "Variável conforme item"
+
+ZURICH (DEMONSTRATIVO DE CÁLCULO ZURICH AUTOMÓVEL):
+- seguradora: "Zurich Minas Brasil Seguros"
+- premio_liquido: "Prêmio Líquido (R$)"
+- iof: "Valor do IOF (R$)"
+- premio_total: "Prêmio Total (R$)" (repete em todas as linhas da tabela de parcelas — use o valor, são todos iguais)
+- validade: "Cálculo válido até o dia"
+- vigencia: "Início de vigência ... Término de vigência ..."
+- bonus: "Classe de bônus"
+- Cobertura Especial para Vidros: linha principal na tabela de Coberturas. Os itens listados logo abaixo dela (Retrovisor Externo, Para-brisa, Vidro Traseiro, Farol Matrix, etc, cada um com seu valor em R$) são as franquias por peça — resuma no campo franquia no formato "Para-brisa R$ X / Retrovisores R$ Y / Faróis R$ Z / Lanternas R$ W" (só os principais, não precisa listar todos).
+- PAGAMENTO — ATENÇÃO, Zurich NÃO separa por cartão/débito/boleto como as outras seguradoras. Tem UMA ÚNICA tabela genérica de parcelamento com colunas "Parcelas | Valor de Entrada (R$) | Valor das Demais (R$) | Prêmio Total (R$)", com linhas no formato "01", "01 + 01", "01 + 02" etc (entrada + N parcelas adicionais = total de parcelas). Traduza assim: linha "01" = 1x (valor = Valor de Entrada dessa linha), linha "01 + 01" = 2x (valor = Valor de Entrada dessa linha), linha "01 + 0N" = (N+1)x. Coloque essa sequência de valores em parcelas_cartao, na ordem 1x,2x,3x... NÃO invente uma forma de pagamento específica (a Zurich não diz se é cartão, débito ou boleto — é só "parcelamento"). Deixe debito_conta=[], parcelas_boleto=[] e boleto_avista="—" — NÃO duplique o valor de 1x como se fosse um "boleto à vista" separado, pois essa informação não existe nesse PDF.
 
 ═══════════════════════════════════════════
 REGRAS DE PARCELAMENTO (todas as seguradoras)
