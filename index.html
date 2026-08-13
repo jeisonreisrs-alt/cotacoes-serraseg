@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- SERRASEG v3.3 - ADICIONA REGRAS ZURICH (pagamento genérico) -->
+<!-- SERRASEG v3.4 - FIX PARCELAMENTO YELUM (formato AUTO PERFIL) -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -379,11 +379,9 @@ YELUM:
 - premio_liquido: "Prêmio Líquido (R$)"
 - iof: "IOF (R$)"
 - premio_total: "Prêmio Total (R$)"
-- A Yelum SÓ oferece pagamento à vista — não tem parcelamento
-- parcelas_cartao: []
-- debito_conta: []
-- parcelas_boleto: []
-- boleto_avista: único valor disponível (mesmo para Carnê, Débito e PIX)
+- Existem dois formatos de PDF da Yelum — verifique se tem uma tabela "FORMA DE PAGAMENTO" com colunas CARNÊ / DÉBITO C/C / CARTÃO DE CRÉDITO / QR Code PIX:
+  • SE NÃO tiver essa tabela (formato simples, só mostra um valor à vista): a Yelum só oferece pagamento à vista nesse caso. parcelas_cartao=[], debito_conta=[], parcelas_boleto=[], boleto_avista=único valor disponível.
+  • SE TIVER essa tabela (formato "YELUM AUTO PERFIL", com linhas "À vista", "1 + 1", "1 + 2" ... até "1 + 11"): cada linha "1 + N" é a parcela (N+1)x — ou seja "À vista"=1x, "1+1"=2x, "1+2"=3x, e assim sucessivamente. Mapeie: parcelas_cartao = coluna "CARTÃO DE CRÉDITO" (1x a 12x, na ordem); debito_conta = coluna "DÉBITO C/C"; parcelas_boleto = coluna "CARNÊ"; boleto_avista = valor da linha "À vista" da coluna CARNÊ (mesmo valor de parcelas_boleto[0]). A coluna "QR Code PIX" pode ser ignorada (não há campo separado pra ela no JSON).
 - franquia vidros "Ver inf. complementares": use "Variável conforme item"
 
 ZURICH (DEMONSTRATIVO DE CÁLCULO ZURICH AUTOMÓVEL):
