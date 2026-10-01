@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- SERRASEG v3.4 - FIX PARCELAMENTO YELUM (formato AUTO PERFIL) -->
+<!-- SERRASEG v3.5 - ADICIONA REGRAS YOUSE (planos de pagamento nomeados) + fix fipe -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -394,6 +394,18 @@ ZURICH (DEMONSTRATIVO DE CÁLCULO ZURICH AUTOMÓVEL):
 - bonus: "Classe de bônus"
 - Cobertura Especial para Vidros: linha principal na tabela de Coberturas. Os itens listados logo abaixo dela (Retrovisor Externo, Para-brisa, Vidro Traseiro, Farol Matrix, etc, cada um com seu valor em R$) são as franquias por peça — resuma no campo franquia no formato "Para-brisa R$ X / Retrovisores R$ Y / Faróis R$ Z / Lanternas R$ W" (só os principais, não precisa listar todos).
 - PAGAMENTO — ATENÇÃO, Zurich NÃO separa por cartão/débito/boleto como as outras seguradoras. Tem UMA ÚNICA tabela genérica de parcelamento com colunas "Parcelas | Valor de Entrada (R$) | Valor das Demais (R$) | Prêmio Total (R$)", com linhas no formato "01", "01 + 01", "01 + 02" etc (entrada + N parcelas adicionais = total de parcelas). Traduza assim: linha "01" = 1x (valor = Valor de Entrada dessa linha), linha "01 + 01" = 2x (valor = Valor de Entrada dessa linha), linha "01 + 0N" = (N+1)x. Coloque essa sequência de valores em parcelas_cartao, na ordem 1x,2x,3x... NÃO invente uma forma de pagamento específica (a Zurich não diz se é cartão, débito ou boleto — é só "parcelamento"). Deixe debito_conta=[], parcelas_boleto=[] e boleto_avista="—" — NÃO duplique o valor de 1x como se fosse um "boleto à vista" separado, pois essa informação não existe nesse PDF.
+
+YOUSE:
+- seguradora: "Youse Seguros"
+- premio_liquido: "Total prêmio líquido / mês"
+- iof: "IOF / mês"
+- premio_total: "Prêmio total do seguro / mês"
+- validade: campo "Validade da cotação" (geralmente em dias, ex: "7 dias" — use o texto como está, não converta pra data)
+- vigencia: campo "Contrato" (ex: "12 meses")
+- fipe: a Youse NÃO mostra código FIPE, só o valor do veículo ("Valor do veículo (FIPE*): R$ X"). Use fipe="—" — NUNCA coloque esse valor em R$ no campo fipe (isso já é bug conhecido).
+- bonus: não aparece explícito, use "—"
+- coberturas: tabela "Coberturas e os Limites Máximos de Indenização" tem colunas Cobertura/Carência e Franquia/LMI/Prêmio líq. mês — franquia e carência vêm juntas separadas por "/" (ex: "Não há / Não há" ou "Não há / R$ 5.909,00 (reduzida)"): use só a parte da FRANQUIA (depois da barra) no campo franquia, ignore a carência. As "Assistências selecionadas" (Assistência a automóvel, Vidros/retrovisores/faróis+Pequenos reparos, Carro reserva, Assistência a bike, Chaveiro auto, etc) também contam como coberturas — inclua-as na lista.
+- PAGAMENTO — ATENÇÃO, a Youse NÃO tem uma tabela progressiva de 1x até Nx como as outras seguradoras. Em vez disso, ela mostra uma tabela "Planos de pagamento" com um número PEQUENO de planos nomeados específicos (ex: só "Em 10x" e "Em 4x", não necessariamente todas as opções de 1x a 10x), cada um com seu próprio desconto, mais "Pagamento à vista" e "Pagamento à vista (pix)". NÃO repita o mesmo valor em todas as posições do array pra preencher a tabela — isso inventa dados que não existem. Em vez disso: monte parcelas_cartao como um array na posição correta de cada plano citado (posição 0 = 1x, posição 3 = 4x, posição 9 = 10x etc) usando a "Parcela mensal" de cada plano "Em Nx", preenchendo com "—" as posições de parcelamento que não foram oferecidas (ex: se só existem planos de 4x e 10x, as posições 1x,2x,3x,5x,6x,7x,8x,9x ficam "—", e as posições 4x e 10x recebem os valores correspondentes). boleto_avista: valor de "Pagamento à vista" (sem pix). debito_conta=[] e parcelas_boleto=[] (a Youse não separa débito/boleto desse jeito).
 
 ═══════════════════════════════════════════
 REGRAS DE PARCELAMENTO (todas as seguradoras)
