@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- SERRASEG v3.5 - ADICIONA REGRAS YOUSE (planos de pagamento nomeados) + fix fipe -->
+<!-- SERRASEG v3.7 - ZURICH operação/zero km/máx parcelas + título cartão seguro -->
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -392,7 +392,13 @@ ZURICH (DEMONSTRATIVO DE CÁLCULO ZURICH AUTOMÓVEL):
 - validade: "Cálculo válido até o dia"
 - vigencia: "Início de vigência ... Término de vigência ..."
 - bonus: "Classe de bônus"
-- Cobertura Especial para Vidros: linha principal na tabela de Coberturas. Os itens listados logo abaixo dela (Retrovisor Externo, Para-brisa, Vidro Traseiro, Farol Matrix, etc, cada um com seu valor em R$) são as franquias por peça — resuma no campo franquia no formato "Para-brisa R$ X / Retrovisores R$ Y / Faróis R$ Z / Lanternas R$ W" (só os principais, não precisa listar todos).
+- operacao: use o campo "Renovação:" (ex: "Renovação Congênere" ou "Renovação Zurich"); se não houver renovação, "Seguro novo". NUNCA use "1 - Cotação" nem "Cotação" (isso é só o tipo do documento, não a operação).
+- zerokm: a Zurich NÃO informa se o veículo é zero km — use "—". Nunca deduza "Sim" pelo ano do modelo.
+- veiculo: use exatamente o texto do campo "Veículo:" (não adicione a marca por conta própria).
+- max_parcelas_sem_juros_cartao: número de linhas da tabela de parcelas (ex: se vai de 01 até 01 + 09, são "10"), pois a coluna de juros é sempre 0,00.
+- Cobertura Especial para Vidros: linha principal na tabela de Coberturas. Os itens listados logo abaixo da linha "Assistência 24 Horas" (Para-brisa, Vidro Traseiro, Vidros Laterais, Maquina de Vidros, Retrovisor Externo, Retrovisor Interno, Farol Convencional, Farol de Xenon/LED, Farol Matrix, Farois Auxiliares, Lanterna Convencional, Lanterna de LED — cada um com seu valor em R$) são as franquias por peça. SEMPRE liste TODOS esses itens que existirem no PDF, SEMPRE nesta mesma ordem fixa, cada um com seu valor exato (nunca use faixas tipo "R$ X a R$ Y", nunca resuma, nunca omita itens), no formato "Para-brisa R$ X / Vidro Traseiro R$ X / Vidros Laterais R$ X / Máquina de Vidros R$ X / Retrovisor Externo R$ X / Retrovisor Interno R$ X / Farol Convencional R$ X / Farol Xenon/LED R$ X / Farol Matrix R$ X / Faróis Auxiliares R$ X / Lanterna Convencional R$ X / Lanterna LED R$ X". Ignore Martelinho, Película, Reparo de Para-choque e Reparo de Arranhões (não são vidros). O mesmo PDF deve sempre gerar exatamente o mesmo resultado.
+- Assistência 24 Horas: a linha da tabela vem com "-" e sem prêmio. Monte a linha com lmi = texto COMPLETO da cláusula de assistência da seção "Cláusulas" (ex: "VIP 400 Km / Caminhões: 400 Km" ou "COMPLETA 300 Km / Caminhões: 400 Km") + a linha de reboque se existir logo abaixo das franquias (ex: "400 Km de Reboque e Km ilimitado para Sinistro"), separados por " — ". premio="Incluído", franquia="—".
+- Carro Reserva: lmi = texto completo da cláusula de carro reserva (ex: "BÁSICO 15 DIAS - LMG R$ 50,00 (DIÁRIA)").
 - PAGAMENTO — ATENÇÃO, Zurich NÃO separa por cartão/débito/boleto como as outras seguradoras. Tem UMA ÚNICA tabela genérica de parcelamento com colunas "Parcelas | Valor de Entrada (R$) | Valor das Demais (R$) | Prêmio Total (R$)", com linhas no formato "01", "01 + 01", "01 + 02" etc (entrada + N parcelas adicionais = total de parcelas). Traduza assim: linha "01" = 1x (valor = Valor de Entrada dessa linha), linha "01 + 01" = 2x (valor = Valor de Entrada dessa linha), linha "01 + 0N" = (N+1)x. Coloque essa sequência de valores em parcelas_cartao, na ordem 1x,2x,3x... NÃO invente uma forma de pagamento específica (a Zurich não diz se é cartão, débito ou boleto — é só "parcelamento"). Deixe debito_conta=[], parcelas_boleto=[] e boleto_avista="—" — NÃO duplique o valor de 1x como se fosse um "boleto à vista" separado, pois essa informação não existe nesse PDF.
 
 YOUSE:
@@ -460,6 +466,7 @@ async function chamarAPI(key, base64Pdf, prompt, tentativa) {
       model: 'claude-sonnet-4-5',
       system: 'Você retorna APENAS JSON válido, sem nenhum texto antes ou depois, sem markdown, sem explicações. Sua resposta deve começar com {{ e terminar com }}. Se o documento não contiver uma cotação de seguro auto reconhecível, retorne o JSON com os campos vazios ("—") em vez de inventar dados.',
       max_tokens: 4000,
+      temperature: 0,
       messages: [{
         role: 'user',
         content: [
@@ -723,7 +730,7 @@ function gerarPDF() {
   // 3. Coberturas
   secao('3. COBERTURAS CONTRATADAS');
   if (d.coberturas?.length) {
-    const cols = [cw*0.40, cw*0.24, cw*0.18, cw*0.18];
+    const cols = [cw*0.31, cw*0.21, cw*0.14, cw*0.34];
     const headers = ['Cobertura','LMI / Indenização','Prêmio (R$)','Franquia'];
     doc.setFillColor(26,39,68);
     doc.rect(mg, y, cw, 6, 'F');
@@ -732,17 +739,20 @@ function gerarPDF() {
     headers.forEach((h,i) => { doc.text(h, cx+2, y+4); cx += cols[i]; });
     y += 7;
     d.coberturas.forEach((c,idx) => {
-      const rowH = 6;
+      // Quebra o texto de cada célula em várias linhas (sem truncar) e ajusta a altura da linha
+      doc.setFontSize(7.5); doc.setFont('helvetica','normal');
+      const cells = [c.nome,c.lmi,c.premio,c.franquia].map((v,i) =>
+        doc.splitTextToSize(String(v||'—'), cols[i]-4));
+      const nLines = Math.max(...cells.map(l => l.length));
+      const lineH = 3.4;
+      const rowH = Math.max(6, nLines*lineH + 2.6);
+      if (y + rowH > 270) { doc.addPage(); y = 18; }
       doc.setFillColor(idx%2===0?255:248,idx%2===0?255:249,idx%2===0?255:250);
       doc.rect(mg, y, cw, rowH, 'F');
-      doc.setTextColor(30,30,30); doc.setFontSize(7.5); doc.setFont('helvetica','normal');
+      doc.setTextColor(30,30,30);
       cx = mg;
-      [c.nome,c.lmi,c.premio,c.franquia].forEach((v,i) => {
-        const maxW = cols[i]-4;
-        const fullTxt = String(v||'—');
-        // For franquia column (i===3), truncate long text
-        const txt = doc.splitTextToSize(fullTxt, maxW)[0];
-        doc.text(txt, cx+2, y+4);
+      cells.forEach((lines,i) => {
+        lines.forEach((ln,li) => doc.text(ln, cx+2, y+4+li*lineH));
         cx += cols[i];
       });
       y += rowH;
@@ -813,7 +823,8 @@ function gerarPDF() {
     return 1;
   }
 
-  tabelaPgto('CARTÃO DE CRÉDITO — sem juros até ' + (d.max_parcelas_sem_juros_cartao||'10') + 'x', d.parcelas_cartao, true);
+  const mxSJ = parseInt(String(d.max_parcelas_sem_juros_cartao||'').replace(/\D/g,''), 10);
+  tabelaPgto(mxSJ ? ('CARTÃO DE CRÉDITO — sem juros até ' + mxSJ + 'x') : 'CARTÃO DE CRÉDITO', d.parcelas_cartao, true);
   tabelaPgto('DÉBITO EM CONTA', d.debito_conta, false);
   tabelaPgto('BOLETO / CARNÊ', d.parcelas_boleto, false);
 
